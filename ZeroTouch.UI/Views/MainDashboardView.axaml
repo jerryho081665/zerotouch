@@ -16,15 +16,34 @@
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
 
-            <!-- default: no border -->
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Template">
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border CornerRadius="35"
+                                Background="{TemplateBinding Background}">
+                            <ContentPresenter
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+                        </Border>
 
+                        <!-- ring -->
+                        <Border x:Name="OuterRing"
+                                CornerRadius="35"
+                                BorderThickness="3"
+                                BorderBrush="Transparent"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+
+            <!-- Darken background on hover -->
             <Style Selector="^:pointerover">
                 <Setter Property="Background" Value="#202020"/>
+            </Style>
 
-                <!-- hover -->
-                <Setter Property="BorderThickness" Value="2"/>
+            <!-- Display ring when hovered -->
+            <Style Selector="^:pointerover /template/ Border#OuterRing">
                 <Setter Property="BorderBrush" Value="White"/>
             </Style>
         </Style>
