@@ -12,19 +12,20 @@
             <Setter Property="Width" Value="70"/>
             <Setter Property="Height" Value="70"/>
             <Setter Property="CornerRadius" Value="35"/>
-            <Setter Property="Background" Value="#202020"/>
+            <Setter Property="Background" Value="#10FFFFFF"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
-            <Setter Property="RenderTransform">
-                <ScaleTransform ScaleX="1.0" ScaleY="1.0"/>
-            </Setter>
+
+            <!-- default: no border -->
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
 
             <Style Selector="^:pointerover">
-                <Setter Property="Background" Value="#404040"/>
-                <Setter Property="RenderTransform">
-                    <ScaleTransform ScaleX="1.2" ScaleY="1.2"/>
-                </Setter>
+                <Setter Property="Background" Value="#202020"/>
+
+                <!-- hover -->
+                <Setter Property="BorderThickness" Value="2"/>
+                <Setter Property="BorderBrush" Value="White"/>
             </Style>
         </Style>
     </UserControl.Styles>
@@ -49,7 +50,7 @@
                             Padding="15"
                             BoxShadow="0 0 20 #0006">
                         <Border.Effect>
-                            <BlurEffect Radius="12"/>
+                            <BlurEffect Radius="4"/>
                         </Border.Effect>
                     </Border>
 
