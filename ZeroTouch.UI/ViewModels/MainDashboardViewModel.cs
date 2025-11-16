@@ -1,5 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -34,10 +36,18 @@ namespace ZeroTouch.UI.ViewModels
         [ObservableProperty] private long _duration;
         [ObservableProperty] private bool _isPlaying;
 
-        public string PlayPauseIconPath =>
-        IsPlaying
-            ? "avares://ZeroTouch.UI/Assets/Icons/Dark/pause-button.png"
-            : "avares://ZeroTouch.UI/Assets/Icons/Dark/play-button.png";
+        public IImage PlayPauseIconPath
+        {
+            get
+            {
+                var uri = new Uri(
+                    IsPlaying
+                        ? "avares://ZeroTouch.UI/Assets/Icons/Dark/pause-button.png"
+                        : "avares://ZeroTouch.UI/Assets/Icons/Dark/play-button.png");
+
+                return new Bitmap(AssetLoader.Open(uri));
+            }
+        }
 
         partial void OnIsPlayingChanged(bool value)
         {
@@ -67,7 +77,6 @@ namespace ZeroTouch.UI.ViewModels
             {
                 Progress = pos;
                 Duration = dur;
-                IsPlaying = true;
             };
         }
 
