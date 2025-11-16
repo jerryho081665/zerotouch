@@ -49,6 +49,16 @@
                 <Setter Property="BorderBrush" Value="White"/>
             </Style>
         </Style>
+
+        <Style Selector="Button.music-btn:pointerover">
+            <Setter Property="Background" Value="#A0000000"/>
+        </Style>
+        
+        <Style Selector="Button.music-btn:pointerover /template/ Border#OuterRing">
+            <Setter Property="BorderBrush" Value="#FFFFFFFF"/>
+            <Setter Property="BorderThickness" Value="2.5"/>
+        </Style>
+        
     </UserControl.Styles>
 
     <Viewbox Stretch="Uniform" StretchDirection="Both">
@@ -79,6 +89,7 @@
                                 CornerRadius="18"
                                 Background="#2ECC71"
                                 BoxShadow="0 0 8 #0008">
+
                             <TextBlock Text="{Binding CurrentTime}"
                                        FontSize="18"
                                        FontWeight="Bold"
@@ -302,7 +313,8 @@
                                             Margin="0,10,0,0">
 
                                     <!-- Previous song -->
-                                    <Button Width="40"
+                                    <Button Classes="dock-btn music-btn"
+                                            Width="40"
                                             Height="40"
                                             CornerRadius="25"
                                             Background="#C23030"
@@ -312,23 +324,34 @@
                                     </Button>
 
                                     <!-- Play / Pause shared button -->
-                                    <Button Width="50"
+                                    <Button Classes="dock-btn music-btn"
+                                            Width="50"
                                             Height="50"
+                                            Background="#C23030"
                                             CornerRadius="25"
-                                            Background="#FFFFFF20"
                                             Command="{Binding PlayPauseCommand}">
-                                        <Image Width="26"
-                                               Source="{Binding PlayPauseIconPath}"/>
+
+                                        <Border x:Name="PlayBtnBorder"
+                                                Background="Transparent"
+                                                CornerRadius="25">
+                                            <Image Width="26"
+                                                   Source="{Binding PlayPauseIconPath}"/>
+                                        </Border>
+
                                     </Button>
 
+
                                     <!-- Next song -->
-                                    <Button Width="40"
+                                    <Button Classes="dock-btn music-btn"
+                                            Width="40"
                                             Height="40"
                                             CornerRadius="25"
                                             Background="#C23030"
                                             Command="{Binding NextCommand}">
+                                        
                                         <Image Source="avares://ZeroTouch.UI/Assets/Icons/Dark/next-button.png"
                                                Width="22"/>
+                                        
                                     </Button>
                                 </StackPanel>
                             </StackPanel>
