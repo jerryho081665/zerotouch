@@ -20,7 +20,7 @@ namespace ZeroTouch.UI.ViewModels
         [ObservableProperty] private bool isBlinkColonEnabled = true;
 
         private readonly WeatherService _weatherService = new();
-        private bool _testTempBar = false;
+        private bool _testTempBar = true;
         [ObservableProperty] private string _location = "高雄市";
         [ObservableProperty] private string _weatherCondition = "Loading...";
         [ObservableProperty] private string _pop = "--%";
@@ -94,7 +94,7 @@ namespace ZeroTouch.UI.ViewModels
             string format = Is24HourFormat ? "HH:mm" : "hh:mm tt";
             var timeText = now.ToString(format);
 
-            if (isBlinkColonEnabled)
+            if (IsBlinkColonEnabled)
             {
                 if (!_blinkColon)
                 {
@@ -105,6 +105,12 @@ namespace ZeroTouch.UI.ViewModels
             }
 
             CurrentTime = timeText;
+        }
+
+        private bool IsNight()
+        {
+            var hour = DateTime.Now.Hour;
+            return hour < 6 || hour >= 18;
         }
 
         private async Task LoadWeatherAsync()
@@ -118,10 +124,13 @@ namespace ZeroTouch.UI.ViewModels
                 string testComfort = "舒適";
 
                 WeatherCondition = testCondition;
+
                 Pop = testPop;
                 Comfort = testComfort;
                 MinTemperature = $"{testMin}°";
                 MaxTemperature = $"{testMax}°";
+
+                WeatherIconPath = GetIconPath(testCondition);
 
                 if (double.TryParse(testMin, out double tMin) &&
                     double.TryParse(testMax, out double tMax))
@@ -138,6 +147,9 @@ namespace ZeroTouch.UI.ViewModels
             MaxTemperature = $"{maxT}°";
             Pop = pop;
             Comfort = comfort;
+
+            WeatherIconPath = GetIconPath(condition);
+
             if (double.TryParse(minT, out var min) &&
                 double.TryParse(maxT, out var max))
             {
@@ -152,13 +164,74 @@ namespace ZeroTouch.UI.ViewModels
 
         private string GetIconPath(string condition)
         {
+            string icon = MapConditionToIcon(condition);
+
+            bool night = IsNight();
+            string timeFolder = night ? "Night" : "Day";
+
+            string basePath = "avares://ZeroTouch.UI/Assets/Weather";
+
+            string nightPath = $"{basePath}/Night/{icon}";
+            string dayPath = $"{basePath}/Day/{icon}";
+
+            if (night && AssetExists(nightPath))
+                return nightPath;
+
+            return dayPath;
+        }
+
+        private string MapConditionToIcon(string condition)
+        {
+            condition ??= "";
+
+            if (condition.Contains("雷"))
+                return "thunder.gif";
+
+            if (condition.Contains("晴") && condition.Contains("陣雨"))
+                return "sunny-isolated-thunderstorms.gif";
+
+            if (condition.Contains("晴") && condition.Contains("雨"))
+                return "sunny-isolated-showers.gif";
+
             if (condition.Contains("晴"))
-                return "avares://ZeroTouch.UI/Assets/Icons/Dark/sunny.svg";
-            if (condition.Contains("雨"))
-                return "avares://ZeroTouch.UI/Assets/Icons/Dark/rainy-1.svg";
+                return "clear.gif";
+
+            if (condition.Contains("陰短暫雨"))
+                return "drizzle.gif";
+
+            if (condition.Contains("局部") && condition.Contains("雨"))
+                return "isolated-showers.gif";
+
+            if (condition.Contains("陣雨"))
+                return "rainy.gif";
+
+            if (condition.Contains("陰有雨") || condition.Contains("雨"))
+                return "rainy.gif";
+
+            if (condition.Contains("多雲時陰"))
+                return "mostly-cloudy.gif";
+
+            if (condition.Contains("多雲"))
+                return "cloudy.gif";
+
             if (condition.Contains("陰"))
-                return "avares://ZeroTouch.UI/Assets/Icons/Dark/cloudy.svg";
-            return "avares://ZeroTouch.UI/Assets/Icons/Dark/rainy.gif";
+                return "mostly-cloudy.gif";
+
+            return "clear.gif";
+        }
+
+        private bool AssetExists(string uri)
+        {
+            try
+            {
+                var stream = AssetLoader.Open(new Uri(uri));
+                stream.Dispose();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static Color Lerp(Color a, Color b, double t)
