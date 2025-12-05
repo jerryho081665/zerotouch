@@ -31,7 +31,10 @@ namespace ZeroTouch.UI.Views
 
         private MemoryLayer? _routeLayer;
         private MemoryLayer? _vehicleLayer;
+        
         private MapControl? _mapControl;
+
+        private double _currentVehicleAngle = 0;
 
         public MainDashboardView()
         {
@@ -96,7 +99,10 @@ namespace ZeroTouch.UI.Views
             _routeLayer = CreateRouteLayer(_interpolatedPath);
             map.Layers.Add(_routeLayer);
 
-            _vehicleLayer = CreateVehicleLayer(_interpolatedPath[0]);
+            var destLayer = CreateDestinationLayer(_interpolatedPath.Last());
+            map.Layers.Add(destLayer);
+
+            _vehicleLayer = CreateVehicleLayer();
             map.Layers.Add(_vehicleLayer);
 
             // Remove default widgets
@@ -149,11 +155,9 @@ namespace ZeroTouch.UI.Views
 
         private MemoryLayer CreateRouteLayer(List<MPoint> pathPoints)
         {
-            var coordinates = new Coordinate[pathPoints.Count];
-            for (int i = 0; i < pathPoints.Count; i++)
-            {
-                coordinates[i] = new Coordinate(pathPoints[i].X, pathPoints[i].Y);
-            }
+            if (pathPoints == null || pathPoints.Count < 2) return new MemoryLayer { Name = "RouteLayer" };
+
+            var coordinates = pathPoints.Select(p => new Coordinate(p.X, p.Y)).ToArray();
 
             var lineString = new LineString(coordinates);
 
@@ -174,26 +178,27 @@ namespace ZeroTouch.UI.Views
             };
         }
 
-        private MemoryLayer CreateVehicleLayer(MPoint startPoint)
+        private MemoryLayer CreateDestinationLayer(MPoint endPoint)
         {
             var pointFeature = new GeometryFeature
             {
-                Geometry = new NetTopologySuite.Geometries.Point(startPoint.X, startPoint.Y)
+                Geometry = new NetTopologySuite.Geometries.Point(endPoint.X, endPoint.Y)
             };
 
             pointFeature.Styles.Add(new SymbolStyle
             {
-                Fill = new Brush(Color.Red),
-                Outline = new Pen(Color.White, 2),
-                SymbolScale = 0.5f,
+                Fill = new Brush(Color.Gold),
+                Outline = new Pen(Color.White, 3),
+                SymbolScale = 0.8,
                 SymbolType = SymbolType.Ellipse
             });
 
-            return new MemoryLayer
-            {
-                Name = "VehicleLayer",
-                Features = new[] { pointFeature }
-            };
+            return new MemoryLayer { Name = "DestinationLayer", Features = new[] { pointFeature } };
+        }
+
+        private MemoryLayer CreateVehicleLayer()
+        {
+            return new MemoryLayer { Name = "VehicleLayer" };
         }
 
         private void StartNavigationSimulation()
@@ -218,6 +223,8 @@ namespace ZeroTouch.UI.Views
                 {
                     _currentStepIndex = 1;  // Loop back to start
                     currentSmoothRotation = 0;
+                    _currentVehicleAngle = 0;
+                    _mapControl.Map.Navigator.RotateTo(0, duration: 0);
                 }
 
                 var newLocation = _interpolatedPath[_currentStepIndex];
@@ -230,17 +237,20 @@ namespace ZeroTouch.UI.Views
 
                 var dx = newLocation.X - prevLocation.X;
                 var dy = newLocation.Y - prevLocation.Y;
+                double angleDeg = 0;
 
                 if (Math.Abs(dx) > 0.0001 || Math.Abs(dy) > 0.0001)
                 {
                     var angleRad = Math.Atan2(dy, dx);
-                    var angleDeg = angleRad * 180.0 / Math.PI;
+                    angleDeg = angleRad * 180.0 / Math.PI;
 
                     var targetRotation = angleDeg - 90;
 
                     currentSmoothRotation = LerpAngle(currentSmoothRotation, targetRotation, 0.1);
 
                     _mapControl.Map.Navigator.RotateTo(currentSmoothRotation, duration: 0);
+
+                    _currentVehicleAngle = LerpAngle(_currentVehicleAngle, angleDeg, 0.1);
                 }
 
                 if (_routeLayer != null)
@@ -272,19 +282,26 @@ namespace ZeroTouch.UI.Views
 
                 if (_vehicleLayer != null)
                 {
+                    var arrowPolygon = CreateArrowPolygon(newLocation, _currentVehicleAngle);
+
                     var newFeature = new GeometryFeature
                     {
-                        Geometry = new NetTopologySuite.Geometries.Point(newLocation.X, newLocation.Y)
+                        Geometry = arrowPolygon
                     };
 
                     var oldFeature = _vehicleLayer.Features.FirstOrDefault();
+
                     if (oldFeature?.Styles.FirstOrDefault() is IStyle oldStyle)
                     {
                         newFeature.Styles.Add(oldStyle);
                     }
                     else
                     {
-                        newFeature.Styles.Add(new SymbolStyle { Fill = new Brush(Color.Red), SymbolScale = 0.5f });
+                        newFeature.Styles.Add(new VectorStyle
+                        {
+                            Fill = new Brush(Color.Red),
+                            Outline = new Pen(Color.White, 2)
+                        });
                     }
 
                     _vehicleLayer.Features = new[] { newFeature };
@@ -301,6 +318,41 @@ namespace ZeroTouch.UI.Views
             };
 
             _navigationTimer.Start();
+        }
+
+        private Polygon CreateArrowPolygon(MPoint center, double angleDegrees)
+        {
+            double scale = 250.0;
+
+            var points = new[]
+            {
+                new MPoint(0, 15),
+                new MPoint(10, -10),
+                new MPoint(0, -4),
+                new MPoint(-10, -10),
+                new MPoint(0, 15)
+            };
+
+            double rad = (angleDegrees - 90) * Math.PI / 180.0;
+            double cos = Math.Cos(rad);
+            double sin = Math.Sin(rad);
+
+            var rotatedCoordinates = new Coordinate[points.Length];
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                var p = points[i];
+
+                double xScaled = p.X * scale;
+                double yScaled = p.Y * scale;
+
+                double xNew = (p.X * cos) - (p.Y * sin);
+                double yNew = (p.X * sin) + (p.Y * cos);
+
+                rotatedCoordinates[i] = new Coordinate(center.X + xNew, center.Y + yNew);
+            }
+
+            return new Polygon(new LinearRing(rotatedCoordinates));
         }
 
         private double LerpAngle(double current, double target, double t)
