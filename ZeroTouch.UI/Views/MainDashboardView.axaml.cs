@@ -25,7 +25,7 @@ namespace ZeroTouch.UI.Views
     {
         private DispatcherTimer? _navigationTimer;
 
-        private List<MPoint> _routePath = new List<MPoint>();
+        private List<MPoint> _interpolatedPath = new List<MPoint>();
 
         private int _currentStepIndex = 0;
 
@@ -49,8 +49,8 @@ namespace ZeroTouch.UI.Views
 
         private void InitializeMap()
         {
-            var mapControl = this.FindControl<MapControl>("MapControl");
-            if (mapControl == null) return;
+            _mapControl = this.FindControl<MapControl>("MapControl");
+            if (_mapControl == null) return;
 
             var map = new Map();
 
@@ -82,35 +82,68 @@ namespace ZeroTouch.UI.Views
                 (120.29775246573561, 22.723400189901515)
             };
 
+            var originalWaypoints = new List<MPoint>();
+
             foreach (var (lon, lat) in lonLats)
             {
                 var p = SphericalMercator.FromLonLat(lon, lat);
-                _routePath.Add(new MPoint(p.x, p.y));
+                originalWaypoints.Add(new MPoint(p.x, p.y));
             }
 
-            var routeLayer = CreateRouteLayer(_routePath);
+            _interpolatedPath = InterpolatePath(originalWaypoints, stepSize: 0.35);
+
+            var routeLayer = CreateRouteLayer(_interpolatedPath);
             map.Layers.Add(routeLayer);
 
-            _vehicleLayer = CreateVehicleLayer(_routePath[0]);
+            _vehicleLayer = CreateVehicleLayer(_interpolatedPath[0]);
             map.Layers.Add(_vehicleLayer);
 
             // Remove default widgets
             while (map.Widgets.TryDequeue(out _)) { }
 
-            mapControl.Map = map;
+            _mapControl.Map = map;
 
             // Ensure the map is loaded before performing operations
-            mapControl.Loaded += (s, e) =>
+            _mapControl.Loaded += (s, e) =>
             {
-                // Get coordinates
-                var coords = SphericalMercator.FromLonLat(120.2845411717568, 22.73356348850075);
+                var firstPoint = _interpolatedPath[0];
+                map.Navigator.CenterOn(firstPoint);
+                map.Navigator.ZoomTo(2.0); // Zoom Level
 
-                var point = new MPoint(coords.x, coords.y);
-
-                // Navigate to the point
-                map.Navigator.CenterOn(point);
-                map.Navigator.ZoomTo(2.0);
+                StartNavigationSimulation();
             };
+        }
+
+        private List<MPoint> InterpolatePath(List<MPoint> waypoints, double stepSize)
+        {
+            var result = new List<MPoint>();
+
+            if (waypoints == null || waypoints.Count == 0) return result;
+
+            for (int i = 0; i < waypoints.Count - 1; i++)
+            {
+                var start = waypoints[i];
+                var end = waypoints[i + 1];
+
+                var distance = start.Distance(end);
+
+                // Count steps needed
+                var steps = Math.Max(1, (int)(distance / stepSize));
+
+                // Linear interpolation
+                for (int j = 0; j < steps; j++)
+                {
+                    var fraction = (double)j / steps;
+                    var x = start.X + (end.X - start.X) * fraction;
+                    var y = start.Y + (end.Y - start.Y) * fraction;
+                    result.Add(new MPoint(x, y));
+                }
+            }
+
+            // add the last waypoint
+            result.Add(waypoints.Last());
+            
+            return result;
         }
 
         private MemoryLayer CreateRouteLayer(List<MPoint> pathPoints)
@@ -166,24 +199,24 @@ namespace ZeroTouch.UI.Views
         {
             if (_mapControl?.Map?.Navigator == null) return;
 
-            _mapControl.Map.Navigator.CenterOn(_routePath[0]);
+            _mapControl.Map.Navigator.CenterOn(_interpolatedPath[0]);
             _mapControl.Map.Navigator.ZoomTo(1.0);
 
             _navigationTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(500)
+                Interval = TimeSpan.FromMilliseconds(20)
             };
 
             _navigationTimer.Tick += (s, e) =>
             {
                 _currentStepIndex++;
 
-                if (_currentStepIndex >= _routePath.Count)
+                if (_currentStepIndex >= _interpolatedPath.Count)
                 {
-                    _currentStepIndex = 0;
+                    _currentStepIndex = 0;  // Loop back to start
                 }
 
-                var newLocation = _routePath[_currentStepIndex];
+                var newLocation = _interpolatedPath[_currentStepIndex];
 
                 if (_vehicleLayer != null)
                 {
@@ -199,7 +232,11 @@ namespace ZeroTouch.UI.Views
                     _vehicleLayer.DataHasChanged();
                 }
 
+                // Center map on the new location
                 _mapControl.Map.Navigator.CenterOn(newLocation);
+
+                // Rotate the map slightly for effect
+                _mapControl.Map.Navigator.RotateTo(_mapControl.Map.Navigator.Viewport.Rotation + 0.01);
 
                 _mapControl.RefreshGraphics();
             };
