@@ -322,7 +322,7 @@ namespace ZeroTouch.UI.Views
 
         private Polygon CreateArrowPolygon(MPoint center, double angleDegrees)
         {
-            double scale = 250.0;
+            double scale = 3.0;
 
             var points = new[]
             {
@@ -346,10 +346,10 @@ namespace ZeroTouch.UI.Views
                 double xScaled = p.X * scale;
                 double yScaled = p.Y * scale;
 
-                double xNew = (p.X * cos) - (p.Y * sin);
-                double yNew = (p.X * sin) + (p.Y * cos);
+                double xRot = (xScaled * cos) - (yScaled * sin);
+                double yRot = (xScaled * sin) + (yScaled * cos);
 
-                rotatedCoordinates[i] = new Coordinate(center.X + xNew, center.Y + yNew);
+                rotatedCoordinates[i] = new Coordinate(center.X + xRot, center.Y + yRot);
             }
 
             return new Polygon(new LinearRing(rotatedCoordinates));
