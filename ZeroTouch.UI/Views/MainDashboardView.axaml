@@ -508,85 +508,55 @@
                     BoxShadow="0 0 25 #0008"
                     IsVisible="{Binding IsSettingsOpen}">
 
-                <Grid RowDefinitions="*,*"
-                      ColumnDefinitions="Auto,2*,*">
+                <Grid RowDefinitions="*,*" ColumnDefinitions="Auto,2*,*">
 
-                    <Grid Grid.Row="0"
-                          Grid.RowSpan="2"
-                          Grid.Column="0"
-                          RowDefinitions="Auto,*"
-                          Margin="12"
-                          VerticalAlignment="Stretch"
-                          HorizontalAlignment="Center">
-
-                        <Border Grid.Row="0"
-                                HorizontalAlignment="Stretch"
-                                Margin="0,0,0,12"
-                                Height="36"
-                                CornerRadius="18"
-                                Background="#2ECC71"
-                                BoxShadow="0 0 8 #0008">
+                    <Grid Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Margin="12" RowDefinitions="Auto,*">
+                        
+                        <Border Height="36" CornerRadius="18" Background="#2ECC71" Margin="0,0,0,12">
                             
                             <TextBlock Text="{Binding CurrentTime}"
-                                       FontSize="18"
-                                       FontWeight="Bold"
-                                       FontFamily="Consolas"
                                        Foreground="White"
+                                       FontFamily="Consolas"
+                                       FontWeight="Bold"
+                                       FontSize="18"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center"
-                                       Margin="0,7,0,0"/>
+                                       Margin="0,2,0,0"/>
                         </Border>
 
-                        <Panel Grid.Row="1"
-                               VerticalAlignment="Stretch"
-                               HorizontalAlignment="Center">
+                        <Border Grid.Row="1" Background="#20FFFFFF" CornerRadius="40" Padding="15">
+                            
+                            <StackPanel Orientation="Vertical"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Spacing="30">
 
-                            <Border Background="#20FFFFFF"
-                                    CornerRadius="40"
-                                    Padding="15"
-                                    BoxShadow="0 0 20 #0006">
-                                
-                                <Border.Effect>
-                                    <BlurEffect Radius="4"/>
-                                </Border.Effect>
-                                
-                            </Border>
+                                <Button Classes="dock-btn"
+                                        Command="{Binding ShowHomeCommand}">
+                                    <Image Source="avares://ZeroTouch.UI/Assets/Icons/Dark/home.png"
+                                           Width="40" Height="40"/>
+                                </Button>
 
-                            <Border Background="Transparent"
-                                    CornerRadius="40"
-                                    Padding="15">
-                                
-                                <StackPanel Orientation="Vertical"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"
-                                            Spacing="30">
+                                <Button Classes="dock-btn"
+                                        Command="{Binding ShowPhoneCommand}">
+                                    <Image Source="avares://ZeroTouch.UI/Assets/Icons/Dark/phone.png"
+                                           Width="40" Height="40"/>
+                                </Button>
 
-                                    <Button Classes="dock-btn"
-                                            Command="{Binding ShowHomeCommand}">
-                                        <Image Source="avares://ZeroTouch.UI/Assets/Icons/Dark/home.png"
-                                               Width="40" Height="40"/>
-                                    </Button>
+                                <Button Classes="dock-btn"
+                                        Command="{Binding ShowMapsCommand}">
+                                    <Image Source="avares://ZeroTouch.UI/Assets/Icons/Dark/google-maps.png"
+                                           Width="40" Height="40"/>
+                                </Button>
 
-                                    <Button Classes="dock-btn"
-                                            Command="{Binding ShowPhoneCommand}">
-                                        <Image Source="avares://ZeroTouch.UI/Assets/Icons/Dark/phone.png"
-                                               Width="40" Height="40"/>
-                                    </Button>
+                                <Button Classes="dock-btn"
+                                        Command="{Binding ShowSettingsCommand}">
+                                    <Image Source="avares://ZeroTouch.UI/Assets/Icons/Dark/settings.png"
+                                           Width="40" Height="40"/>
+                                </Button>
 
-                                    <Button Classes="dock-btn"
-                                            Command="{Binding ShowMapsCommand}">
-                                        <Image Source="avares://ZeroTouch.UI/Assets/Icons/Dark/google-maps.png"
-                                               Width="40" Height="40"/>
-                                    </Button>
-
-                                    <Button Classes="dock-btn"
-                                            Command="{Binding ShowSettingsCommand}">
-                                        <Image Source="avares://ZeroTouch.UI/Assets/Icons/Dark/settings.png"
-                                               Width="40" Height="40"/>
-                                    </Button>
-                                </StackPanel>
-                            </Border>
-                        </Panel>
+                            </StackPanel>
+                        </Border>
                     </Grid>
 
                     <Border Grid.Row="0"
@@ -594,31 +564,48 @@
                             Grid.Column="1"
                             CornerRadius="25"
                             Background="#1E1E1E"
+                            BorderBrush="#333333"
+                            BorderThickness="1"
                             Margin="12"
-                            Padding="20">
-                        
-                        <StackPanel Spacing="16">
-                            
-                            <TextBlock Text="Settings"
-                                       FontSize="24"
-                                       FontWeight="Bold"
-                                       Foreground="White"
-                                       Margin="0,0,0,10"/>
+                            Padding="30">
 
-                            <ToggleSwitch Content="Dark theme"
-                                          IsChecked="{Binding IsDarkTheme}"
-                                          FontSize="16"
-                                          Margin="0,4,0,0"/>
+                        <StackPanel Spacing="20">
 
-                            <ToggleSwitch Content="Blink clock colon"
-                                          IsChecked="{Binding IsClockBlinking}"
-                                          FontSize="16"
-                                          Margin="0,4,0,0"/>
+                            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
+                                <TextBlock Text="⚙️" FontSize="24" VerticalAlignment="Center"/>
+                                <TextBlock Text="System Settings"
+                                           FontSize="28"
+                                           FontWeight="Bold"
+                                           Foreground="White"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
 
-                            <ToggleSwitch Content="24-hour format"
-                                          IsChecked="{Binding Is24HourFormat}"
-                                          FontSize="16"
-                                          Margin="0,4,0,0"/>
+                            <Separator Background="#333333" Height="1" Margin="0,0,0,10"/>
+
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="Dark Theme" FontSize="18" FontWeight="Medium" Foreground="White"/>
+                                    <TextBlock Text="Use darker colors for night driving" FontSize="12" Foreground="#888888"/>
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsDarkTheme}" OnContent="" OffContent=""/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="Blinking Colon" FontSize="18" FontWeight="Medium" Foreground="White"/>
+                                    <TextBlock Text="Animate the separator in digital clock" FontSize="12" Foreground="#888888"/>
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsClockBlinking}" OnContent="" OffContent=""/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*, Auto">
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="24-Hour Format" FontSize="18" FontWeight="Medium" Foreground="White"/>
+                                    <TextBlock Text="Switch between 12h and 24h display" FontSize="12" Foreground="#888888"/>
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding Is24HourFormat}" OnContent="" OffContent=""/>
+                            </Grid>
+
                         </StackPanel>
                     </Border>
 
@@ -626,24 +613,63 @@
                             Grid.RowSpan="2"
                             Grid.Column="2"
                             CornerRadius="25"
-                            Background="#202020"
+                            Background="#252525"
+                            BorderBrush="#333333"
+                            BorderThickness="1"
                             Margin="12"
                             Padding="20">
-                        
-                        <StackPanel Spacing="10"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center">
-                            
-                            <TextBlock Text="Preview"
-                                       FontSize="20"
-                                       FontWeight="Bold"
-                                       Foreground="White"/>
-                            
-                            <TextBlock Text="(Clock / Theme preview later)"
-                                       FontSize="14"
-                                       Foreground="#BBBBBB"
-                                       HorizontalAlignment="Center"/>
-                        </StackPanel>
+
+                        <Grid RowDefinitions="Auto, *, Auto">
+
+                            <TextBlock Grid.Row="0" Text="Vehicle Status" FontSize="20" FontWeight="Bold" Foreground="#FFA500" Margin="0,0,0,15"/>
+
+                            <StackPanel Grid.Row="1" Spacing="20">
+
+                                <StackPanel Spacing="5">
+                                    <Grid>
+                                        <TextBlock Text="Battery Level" Foreground="#DDDDDD" FontSize="14"/>
+                                        <TextBlock Text="82%" Foreground="#2ECC71" FontSize="14" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                    </Grid>
+                                    
+                                    <ProgressBar Value="82" Maximum="100" Height="6" CornerRadius="3" Foreground="#2ECC71" Background="#444444"/>
+                                
+                                </StackPanel>
+
+                                <StackPanel Spacing="5">
+                                    <Grid>
+                                        <TextBlock Text="System Temp" Foreground="#DDDDDD" FontSize="14"/>
+                                        <TextBlock Text="45°C" Foreground="#E74C3C" FontSize="14" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                    </Grid>
+                                    
+                                    <ProgressBar Value="45" Maximum="100" Height="6" CornerRadius="3" Foreground="#E74C3C" Background="#444444"/>
+                                </StackPanel>
+
+                                <StackPanel Spacing="5">
+                                    <Grid>
+                                        <TextBlock Text="Storage Usage" Foreground="#DDDDDD" FontSize="14"/>
+                                        <TextBlock Text="12GB / 64GB" Foreground="#3498DB" FontSize="14" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                    </Grid>
+                                    
+                                    <ProgressBar Value="18" Maximum="100" Height="6" CornerRadius="3" Foreground="#3498DB" Background="#444444"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Border Grid.Row="2" Background="#303030" CornerRadius="15" Padding="15" Margin="0,20,0,0">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="Connectivity" FontWeight="Bold" Foreground="White"/>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="10" Height="10" CornerRadius="5" Background="#2ECC71"/>
+                                        <TextBlock Text="Bluetooth: Connected" Foreground="#AAAAAA" FontSize="12"/>
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="10" Height="10" CornerRadius="5" Background="#2ECC71"/>
+                                        <TextBlock Text="GPS: Signal Strong" Foreground="#AAAAAA" FontSize="12"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </Border>
                 </Grid>
             </Border>
