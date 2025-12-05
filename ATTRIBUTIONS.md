@@ -56,6 +56,7 @@ All assets remain the property of their respective authors and are used accordin
 | **Precipitation Icon** | <a href="https://www.flaticon.com/free-icons/precipitation" title="precipitation icons">Precipitation icons created by Laura Reen - Flaticon</a> | Laura Reen | Flaticon License |
 | **Leaf Icon** | <a href="https://www.flaticon.com/free-icons/leaf" title="leaf icons">Leaf icons created by Good Ware - Flaticon</a> | Good Ware | Flaticon License |
 | **Navigation Icon** | <a href="https://www.flaticon.com/free-icons/navigation" title="navigation icons">Navigation icons created by Freepik - Flaticon</a> | Freepik | Flaticon License |
+| **Location Pin Icon** | <a href="https://www.flaticon.com/free-icons/pin" title="pin icons">Pin icons created by Freepik - Flaticon</a> | Freepik | Flaticon License |
 
 <br>
 
