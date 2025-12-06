@@ -50,7 +50,15 @@ namespace ZeroTouch.UI.Services
         public void Play()
         {
             if (_playlist.Count == 0) return;
-            Play(_playlist[_currentIndex]);
+            
+            if (_mediaPlayer.Media != null)
+            {
+                _mediaPlayer.Play(); // Resume if paused
+            }
+            else
+            {
+                Play(_playlist[_currentIndex]);
+            }
         }
 
         public void Play(string path)
@@ -61,21 +69,28 @@ namespace ZeroTouch.UI.Services
             _mediaPlayer.Play();
         }
 
-        public void Pause() => _mediaPlayer.Pause();
+        public void Pause()
+        {
+            if (_mediaPlayer.CanPause)
+            {
+                _mediaPlayer.Pause();
+            }
+        }
+
         public void Stop() => _mediaPlayer.Stop();
 
         public void Next()
         {
             if (_playlist.Count == 0) return;
             _currentIndex = (_currentIndex + 1) % _playlist.Count;
-            Play();
+            Play(_playlist[_currentIndex]);
         }
 
         public void Previous()
         {
             if (_playlist.Count == 0) return;
             _currentIndex = (_currentIndex - 1 + _playlist.Count) % _playlist.Count;
-            Play();
+            Play(_playlist[_currentIndex]);
         }
 
         public void Seek(long ms)
