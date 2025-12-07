@@ -42,10 +42,16 @@ namespace ZeroTouch.UI.ViewModels
         // 0: Settings
         // 1: Dashboard (Home)
         // 2: Phone
+        // 3: In-Call
         [ObservableProperty] private int _currentPageIndex = 1;
 
         // Phone Features
         [ObservableProperty] private string _displayNumber = "";
+        [ObservableProperty] private string _callingContactName = "Unknown";
+        [ObservableProperty] private string _callStatusText = "Calling...";
+        [ObservableProperty] private bool _isMuted = false;
+        [ObservableProperty] private bool _isKeypadVisible = false;
+        [ObservableProperty] private bool _isSpeakerOn = false;
 
         // Settings options
         [ObservableProperty] private bool _isDarkTheme = true;
@@ -396,10 +402,47 @@ namespace ZeroTouch.UI.ViewModels
         {
             if (!string.IsNullOrEmpty(DisplayNumber))
             {
-                // TODO: Invoke Call Service
-                Console.WriteLine($"Calling {DisplayNumber}...");
+                StartCall(DisplayNumber);
             }
         }
+
+        [RelayCommand]
+        private void CallContact(string contactName)
+        {
+            StartCall(contactName);
+        }
+
+        private void StartCall(string target)
+        {
+            CallingContactName = target;
+            CallStatusText = "Calling...";
+
+            CurrentPageTransition = _verticalTransition;
+
+            CurrentPageIndex = 3;
+        }
+
+        [RelayCommand]
+        private void HangUp()
+        {
+            CurrentPageIndex = 2;
+            DisplayNumber = "";
+        }
+
+        [RelayCommand]
+        private void DtmfTap(string key)
+        {
+            CallStatusText = $"Numbers: {key}";
+        }
+
+        [RelayCommand]
+        private void ToggleMute() => IsMuted = !IsMuted;
+
+        [RelayCommand]
+        private void ToggleKeypad() => IsKeypadVisible = !IsKeypadVisible;
+
+        [RelayCommand]
+        private void ToggleSpeaker() => IsSpeakerOn = !IsSpeakerOn;
 
         [RelayCommand]
         private void ShowHome()
