@@ -4,6 +4,7 @@ using Avalonia.Threading;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform;
+using Avalonia;
 using BruTile.Web;
 using Mapsui;
 using Mapsui.Extensions;
@@ -38,6 +39,11 @@ namespace ZeroTouch.UI.Views
         private MapControl? _mapControl;
 
         private double _currentVehicleAngle = 0;
+
+        // 1. 新增一個變數來儲存終點圖層，方便後續更新
+        private MemoryLayer? _destinationLayer;
+        //用來紀錄目前哪一個方塊被選中
+        private Border? _selectedRouteBorder; 
 
         public MainDashboardView()
         {
@@ -92,77 +98,211 @@ namespace ZeroTouch.UI.Views
 
             map.Layers.Add(new TileLayer(urlFormatter));
 
-
-            var lonLats = new[]
-            {
-                // start point
-                (120.2846128114305, 22.732236533422288),
-
-                (120.29053110655967, 22.73249458710715),
-                (120.29239839952325, 22.732232361349443),
-                (120.29172547199514, 22.727218383170385),
-
-                (120.29532144100894, 22.72667258631913),
-                (120.29591697595505, 22.72637869480983),
-                (120.29629763948877, 22.72595883940386),
-
-                (120.29661829404742, 22.725467958231206),
-
-                // destination
-                (120.29775246573561, 22.723400189901515)
-            };
-            // var lonLats = new[]
-            // {
-            //     // start point
-            //     (120.28471712200883, 22.73226013221393),
-
-            //     (120.29053110655967, 22.73249458710715),
-            //     (120.29239839952325, 22.732232361349443),
-            //     (120.29172547199514, 22.727218383170385),
-
-            //     (120.29532144100894, 22.72667258631913),
-            //     (120.29591697595505, 22.72637869480983),
-            //     (120.29629763948877, 22.72595883940386),
-
-            //     (120.29661829404742, 22.725467958231206),
-
-            //     // destination
-            //     (120.29775246573561, 22.723400189901515)
-            // };
-
-            var originalWaypoints = new List<MPoint>();
-
-            foreach (var (lon, lat) in lonLats)
-            {
-                var p = SphericalMercator.FromLonLat(lon, lat);
-                originalWaypoints.Add(new MPoint(p.x, p.y));
-            }
-
-            _interpolatedPath = InterpolatePath(originalWaypoints, stepSize: 1.2);
-
-            _routeLayer = CreateRouteLayer(_interpolatedPath);
-            map.Layers.Add(_routeLayer);
-
-            var destLayer = CreateDestinationLayer(_interpolatedPath.Last());
-            map.Layers.Add(destLayer);
-
+            // 初始化空圖層 (這裡先不加資料，等 LoadRoute 填入)
+            _routeLayer = new MemoryLayer { Name = "RouteLayer" };
             _vehicleLayer = CreateVehicleLayer();
+            _destinationLayer = new MemoryLayer { Name = "DestinationLayer" }; // 新增這行
+            
+            map.Layers.Add(_routeLayer);
+            map.Layers.Add(_destinationLayer);
             map.Layers.Add(_vehicleLayer);
 
-            // Remove default widgets
+            // 移除預設小工具
             while (map.Widgets.TryDequeue(out _)) { }
 
             _mapControl.Map = map;
 
-            // Ensure the map is loaded before performing operations
+            // 確保載入後執行預設路徑 (Home)
             _mapControl.Loaded += (s, e) =>
             {
-                var firstPoint = _interpolatedPath[0];
-                map.Navigator.CenterOn(firstPoint);
-                map.Navigator.ZoomTo(2.0); // Zoom Level
-
-                StartNavigationSimulation();
+                // 預設載入第一條路徑
+                PreviewRoute("Home");
             };
+        }
+
+        // ... (前面的 using 與變數宣告保持不變) ...
+
+        // 1. [新增] 獨立的讀檔方法：只負責回傳座標，不負責畫圖
+        private List<MPoint> GetRoutePoints(string routeIdentifier)
+        {
+            string fileName;
+            switch (routeIdentifier)
+            {
+                case "Home": fileName = "route-1.json"; break;
+                case "Work": fileName = "route-2.json"; break;
+                default:
+                    if (routeIdentifier.StartsWith("route"))
+                        fileName = routeIdentifier.EndsWith(".json") ? routeIdentifier : $"{routeIdentifier}.json";
+                    else
+                        fileName = $"route-{routeIdentifier}.json"; 
+                    break;
+            }
+
+            var routeUri = new Uri($"avares://ZeroTouch.UI/Assets/Routes/{fileName}");
+            var points = new List<MPoint>();
+
+            try
+            {
+                if (AssetLoader.Exists(routeUri))
+                {
+                    using var stream = AssetLoader.Open(routeUri);
+                    using var reader = new System.IO.StreamReader(stream);
+                    var jsonContent = reader.ReadToEnd();
+                    using (var doc = System.Text.Json.JsonDocument.Parse(jsonContent))
+                    {
+                        foreach (var element in doc.RootElement.EnumerateArray())
+                        {
+                            if (element.TryGetProperty("lon", out var lonProp) && 
+                                element.TryGetProperty("lat", out var latProp))
+                            {
+                                var p = SphericalMercator.FromLonLat(lonProp.GetDouble(), latProp.GetDouble());
+                                points.Add(new MPoint(p.x, p.y));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Error] Failed to load route: {ex.Message}");
+            }
+            return points;
+        }
+
+        // 2. [新增] 預覽方法：只更新右邊的靜態地圖 (MapViewMapControl)
+        private void PreviewRoute(string routeIdentifier)
+        {
+            var originalWaypoints = GetRoutePoints(routeIdentifier);
+            if (originalWaypoints.Count < 2) return;
+
+            var previewPath = InterpolatePath(originalWaypoints, stepSize: 1.2);
+            
+            // 找到右邊的地圖控制項
+            var previewMapControl = this.FindControl<MapControl>("MapViewMapControl");
+            if (previewMapControl?.Map == null) return;
+
+            // 清除舊圖層，重新繪製
+            previewMapControl.Map.Layers.Clear();
+            
+            // 補回底圖
+            previewMapControl.Map.Layers.Add(new TileLayer(new HttpTileSource(
+                new BruTile.Predefined.GlobalSphericalMercator(),
+                "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+                new[] { "a", "b", "c", "d" },
+                name: "CartoDB Voyager")));
+
+            // 加入路徑線
+            var routeLayer = CreateRouteLayer(previewPath);
+            previewMapControl.Map.Layers.Add(routeLayer);
+            
+            // 加入終點
+            previewMapControl.Map.Layers.Add(CreateDestinationLayer(previewPath.Last()));
+
+            // 自動縮放視角以涵蓋整條路徑
+            if (routeLayer.Extent != null)
+            {
+                // Grow(200) 讓視角留點邊距
+                previewMapControl.Map.Navigator.ZoomToBox(routeLayer.Extent.Grow(200)); 
+            }
+            
+            previewMapControl.RefreshGraphics();
+        }
+
+        // 3. [修改] 導航方法 (取代原本的 LoadRoute)：負責主畫面動畫與頁面跳轉
+        private void StartNavigation(string routeIdentifier)
+        {
+            _navigationTimer?.Stop();
+
+            var originalWaypoints = GetRoutePoints(routeIdentifier);
+            if (originalWaypoints.Count < 2) return;
+
+            // 設定全域路徑變數 (給 Timer 動畫用)
+            _interpolatedPath = InterpolatePath(originalWaypoints, stepSize: 1.2);
+            _currentStepIndex = 0;
+            _currentVehicleAngle = 0;
+
+            // 更新主畫面地圖圖層
+            if (_routeLayer != null)
+            {
+                var newRouteLayer = CreateRouteLayer(_interpolatedPath);
+                _routeLayer.Features = newRouteLayer.Features;
+                _routeLayer.DataHasChanged();
+            }
+            if (_destinationLayer != null)
+            {
+                var newDestLayer = CreateDestinationLayer(_interpolatedPath.Last());
+                _destinationLayer.Features = newDestLayer.Features;
+                _destinationLayer.DataHasChanged();
+            }
+
+            // 將主地圖視角移到起點
+            if (_mapControl?.Map?.Navigator != null)
+            {
+                _mapControl.Map.Navigator.CenterOn(_interpolatedPath[0]);
+                _mapControl.Map.Navigator.ZoomTo(2.0);
+            }
+
+            // 開始導航模擬
+            StartNavigationSimulation();
+
+            // === 關鍵：切換回主畫面 ===
+            if (DataContext is MainDashboardViewModel vm)
+            {
+                vm.CurrentPageIndex = 1; // 切換到 Dashboard 頁面
+            }
+        }
+
+        // 4. [新增] 事件處理：滑鼠滑入時預覽 (Hover)
+        // 請記得去 XAML 的 Border 加上 PointerEntered="OnRoutePreviewPointerEntered"
+        private void OnRoutePreviewPointerEntered(object? sender, PointerEventArgs e)
+        {
+            // 從 Tag 取得路徑名稱
+            if (sender is Control control && control.Tag is string routeName)
+            {
+                PreviewRoute(routeName);
+            }
+        }
+
+        // 5. [修改] 事件處理：點擊 Go 按鈕時開始導航
+        private void OnGoRouteClick(object? sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string routeName)
+            {
+                StartNavigation(routeName);
+            }
+        }
+        
+        // [新增/修改] 點擊路徑方塊的事件
+        private void OnRouteBlockClicked(object? sender, PointerPressedEventArgs e)
+        {
+            if (sender is Border clickedBorder && clickedBorder.Tag is string routeName)
+            {
+                // A. 恢復上一個方塊的顏色
+                if (_selectedRouteBorder != null)
+                {
+                    // 使用完整名稱 Avalonia.Media.SolidColorBrush
+                    _selectedRouteBorder.Background = Avalonia.Media.SolidColorBrush.Parse("#252525");
+                    
+                    // 使用完整名稱 Avalonia.Media.Brushes
+                    _selectedRouteBorder.BorderBrush = Avalonia.Media.Brushes.Transparent;
+                    
+                    _selectedRouteBorder.BorderThickness = new Thickness(0);
+                }
+
+                // B. 設定新方塊的顏色
+                _selectedRouteBorder = clickedBorder;
+                
+                // 設定選中時的背景色 (深灰色)
+                _selectedRouteBorder.Background = Avalonia.Media.SolidColorBrush.Parse("#383838");
+                
+                // 設定選中時的邊框色 (綠色)
+                _selectedRouteBorder.BorderBrush = Avalonia.Media.SolidColorBrush.Parse("#2ECC71");
+                
+                _selectedRouteBorder.BorderThickness = new Thickness(2);
+
+                // C. 呼叫預覽
+                PreviewRoute(routeName);
+            }
         }
 
         private List<MPoint> InterpolatePath(List<MPoint> waypoints, double stepSize)

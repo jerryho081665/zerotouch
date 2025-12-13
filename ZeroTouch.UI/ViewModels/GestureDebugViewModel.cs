@@ -14,7 +14,7 @@ namespace ZeroTouch.UI.ViewModels
         private string _connectionStatus = "Disconnected";
 
         [ObservableProperty]
-        private string _lastGesture = "—";
+        private string _lastGesture = "None";
 
         [ObservableProperty]
         private double _confidence = 0.0;

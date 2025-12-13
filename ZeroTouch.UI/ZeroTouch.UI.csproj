@@ -13,6 +13,7 @@
     <Folder Include="Assets\Icons\Dark\" />
     <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
+    <AvaloniaResource Include="Assets\Routes\*.json" />
 	<None Update=".env">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	</None>
