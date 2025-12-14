@@ -42,7 +42,8 @@ namespace ZeroTouch.UI.ViewModels
         // 0: Settings
         // 1: Dashboard (Home)
         // 2: Phone
-        // 3: In-Call
+        // 3: Maps
+        // 4: In-Call
         [ObservableProperty] private int _currentPageIndex = 1;
 
         // Phone Features
@@ -419,7 +420,7 @@ namespace ZeroTouch.UI.ViewModels
 
             CurrentPageTransition = _verticalTransition;
 
-            CurrentPageIndex = 3;
+            CurrentPageIndex = 4;
         }
 
         [RelayCommand]
@@ -482,7 +483,7 @@ namespace ZeroTouch.UI.ViewModels
             if (CurrentPageIndex == 0) CurrentPageTransition = _horizontalTransition;
             else if (CurrentPageIndex == 2) CurrentPageTransition = _verticalTransition;
 
-            CurrentPageIndex = 1;
+            CurrentPageIndex = 3;
         }
     }
 }
