@@ -1,13 +1,17 @@
+using Avalonia;
+using Avalonia.Controls;
 using LibVLCSharp.Shared;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace ZeroTouch.UI.Services
 {
     public class MusicPlayerService : IDisposable
     {
-        private readonly LibVLC _libVLC;
-        private readonly MediaPlayer _mediaPlayer;
+        private readonly LibVLC? _libVLC;
+        private readonly MediaPlayer? _mediaPlayer;
+        private bool _isVLCAvailable = false;
 
         private readonly List<string> _playlist = new();
         private int _currentIndex = 0;
@@ -20,24 +24,41 @@ namespace ZeroTouch.UI.Services
 
         public MusicPlayerService()
         {
-            var libVlcOptions = new[]
+            if (Design.IsDesignMode)
+                return;
+            
+            try
             {
-                "--no-video",
-                "--no-video-title-show",
-                "--no-spu",
-                "--file-caching=1000",
-                "--audio-resampler=soxr",
-                "--avcodec-threads=4",
-                "--aout=wasapi"
-            };
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Console.WriteLine("Mac OS X detected, skipped.");
+                    return;
+                }
 
-            _libVLC = new LibVLC(libVlcOptions);
-            _mediaPlayer = new MediaPlayer(_libVLC);
+                var libVlcOptions = new[]
+                {
+                    "--no-video",
+                    "--no-video-title-show",
+                    "--no-spu",
+                    "--file-caching=1000",
+                    "--audio-resampler=soxr",
+                    "--avcodec-threads=4",
+                    "--aout=wasapi"
+                };
+                _libVLC = new LibVLC(libVlcOptions);
+                _mediaPlayer = new MediaPlayer(_libVLC);
+                _isVLCAvailable = true;
 
-            _mediaPlayer.TimeChanged += (sender, e) =>
+                _mediaPlayer.TimeChanged += (sender, e) =>
+                {
+                    PositionChanged?.Invoke(_mediaPlayer.Time, _mediaPlayer.Length);
+                };
+            }
+            catch (Exception ex)
             {
-                PositionChanged?.Invoke(_mediaPlayer.Time, _mediaPlayer.Length);
-            };
+                Console.WriteLine($"VLC initialization failed, {ex.Message}");
+                _isVLCAvailable = false;
+            }
         }
 
         public void SetPlaylist(IEnumerable<string> songs)

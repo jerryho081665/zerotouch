@@ -1,9 +1,10 @@
-using System.Linq;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using System.Linq;
+using System.Runtime.InteropServices;
 using LibVLCSharp.Shared;
 using ZeroTouch.UI.ViewModels;
 using ZeroTouch.UI.Views;
@@ -14,7 +15,14 @@ namespace ZeroTouch.UI
     {
         public override void Initialize()
         {
-            Core.Initialize();
+            if (!Design.IsDesignMode)
+            {
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    // Only initialize the LibVLC core on non-macOS platforms.
+                    try { Core.Initialize(); } catch { /* Ignore initialize error */ }
+                }
+            }
             AvaloniaXamlLoader.Load(this);
         }
 
