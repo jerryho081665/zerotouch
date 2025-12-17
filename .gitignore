@@ -55,6 +55,11 @@ nunit-*.xml
 
 # IDE
 .vs/
+.idea/
+
+# Operating System files
+.DS_Store
+.DS_Store?
 
 # Environment variables and API keys
 .env
