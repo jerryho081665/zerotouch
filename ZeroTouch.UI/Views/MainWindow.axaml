@@ -18,6 +18,9 @@
 		<!-- Default view: MainConsole. To test connection, change this value to GestureDebugView. -->
 		<ContentControl Content="{Binding CurrentView}"/>
         
-        <views:DriverStateView DataContext="{Binding DriverStateVm}" />
+        <!-- Driver State overlay -->
+        <views:DriverStateView
+            DataContext="{Binding DriverStateVm}"
+            IsVisible="{Binding IsFatigueActive}"/>
 	</Grid>
 </Window>
