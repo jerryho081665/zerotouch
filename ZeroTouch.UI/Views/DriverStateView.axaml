@@ -8,20 +8,20 @@
     <UserControl.Styles>
         <Style Selector="Grid.fatigue-card.animate Border#CardBorder">
             <Style.Animations>
-                
+
                 <Animation Duration="0:0:0.5"
                            IterationCount="Infinite"
                            PlaybackDirection="Alternate"
                            Easing="SineEaseInOut">
-                    
+
                     <KeyFrame Cue="0%">
-                        <Setter Property="BoxShadow" Value="0 0 20 #AA000000" />
+                        <Setter Property="BoxShadow" Value="0 0 20 0 #AA000000" />
                         <Setter Property="ScaleTransform.ScaleX" Value="1.0" />
                         <Setter Property="ScaleTransform.ScaleY" Value="1.0" />
                     </KeyFrame>
-                    
+
                     <KeyFrame Cue="100%">
-                        <Setter Property="BoxShadow" Value="0 0 60 #FF0000" />
+                        <Setter Property="BoxShadow" Value="0 0 50 10 #FF0000" />
                         <Setter Property="ScaleTransform.ScaleX" Value="1.03" />
                         <Setter Property="ScaleTransform.ScaleY" Value="1.03" />
                     </KeyFrame>
@@ -32,15 +32,15 @@
         <Style Selector="Grid.fatigue-card.animate">
             <Style.Animations>
                 <Animation Duration="0:0:0.3" FillMode="Forward">
-                    
+
                     <KeyFrame Cue="0%">
                         <Setter Property="Opacity" Value="0" />
                     </KeyFrame>
-                    
+
                     <KeyFrame Cue="100%">
                         <Setter Property="Opacity" Value="1" />
                     </KeyFrame>
-                    
+
                 </Animation>
             </Style.Animations>
         </Style>
@@ -53,8 +53,8 @@
 
         <Viewbox Stretch="Uniform" StretchDirection="Both">
 
-            <Panel Margin="16">
-                
+            <Panel Margin="25">
+
                 <Grid Width="1000"
                       Height="560"
                       HorizontalAlignment="Center"
