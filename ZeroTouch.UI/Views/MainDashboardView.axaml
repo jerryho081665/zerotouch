@@ -910,7 +910,10 @@
                                                     x:DataType="nav:IFocusableItem"
                                                     DataContext="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).MusicFocusGroup.Items[0]}"
                                                     Command="{Binding Command}">
-    
+                                                <Button.Tag>
+                                                    <Binding Path="IsSelected"/>
+                                                </Button.Tag>
+
                                                 <Image Source="avares://ZeroTouch.UI/Assets/Icons/Dark/previous-button.png"
                                                        Width="22"/>
                                             </Button>
@@ -924,7 +927,10 @@
                                                     x:DataType="nav:IFocusableItem"
                                                     DataContext="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).MusicFocusGroup.Items[1]}"
                                                     Command="{Binding Command}">
-                                                
+                                                <Button.Tag>
+                                                    <Binding Path="IsSelected"/>
+                                                </Button.Tag>
+
                                                 <Grid>
 
                                                     <!-- Play -->
@@ -962,7 +968,9 @@
                                                     x:DataType="nav:IFocusableItem"
                                                     DataContext="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).MusicFocusGroup.Items[2]}"
                                                     Command="{Binding Command}">
-                                                
+                                                <Button.Tag>
+                                                    <Binding Path="IsSelected"/>
+                                                </Button.Tag>
                                                 <Image Source="avares://ZeroTouch.UI/Assets/Icons/Dark/next-button.png"
                                                        Width="22"/>
                                             </Button>
