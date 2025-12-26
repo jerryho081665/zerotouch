@@ -141,7 +141,8 @@ chmod +x scripts/run-jetson.sh
 
 This script sets required environment variables (e.g. LD_PRELOAD) before launching the application.
 
-For details about the root cause and the workaround, see: `docs/deployment/jetson.md`.
+For details about the root cause and the workaround, see the 
+[docs/deployment/jetson.md](docs/deployment/jetson.md).
 
 <br>
 
