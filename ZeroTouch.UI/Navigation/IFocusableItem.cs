@@ -6,6 +6,7 @@ namespace ZeroTouch.UI.Navigation
     {
         bool IsSelected { get; set; }
         void Activate();
+        bool IsAnimating { get; }
 
         ICommand Command { get; }
     }
