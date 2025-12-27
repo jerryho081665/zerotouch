@@ -24,7 +24,7 @@ namespace ZeroTouch.UI.Views
     {
         private DispatcherTimer? _navigationTimer;
 
-        private List<MPoint> _interpolatedPath = new List<MPoint>();
+        private List<MPoint> _interpolatedPath = [];
 
         private int _currentStepIndex = 0;
 
@@ -36,7 +36,6 @@ namespace ZeroTouch.UI.Views
         private double _currentVehicleAngle = 0;
 
         private MemoryLayer? _destinationLayer;
-        private Border? _selectedRouteBorder;
 
         public MainDashboardView()
         {
@@ -49,13 +48,13 @@ namespace ZeroTouch.UI.Views
             Loaded += MainDashboardView_Loaded;
 
             var slider = this.FindControl<Slider>("ProgressSlider");
-            if (slider != null)
-            {
-                slider.AddHandler(PointerPressedEvent, OnSliderDragStarted, RoutingStrategies.Tunnel);
-                slider.AddHandler(PointerReleasedEvent, OnSliderDragEnded, RoutingStrategies.Tunnel);
-
-                slider.AddHandler(PointerCaptureLostEvent, OnSliderDragEnded, RoutingStrategies.Tunnel);
-            }
+            
+            if (slider == null)
+                return;
+            
+            slider.AddHandler(PointerPressedEvent, OnSliderDragStarted, RoutingStrategies.Tunnel);
+            slider.AddHandler(PointerReleasedEvent, OnSliderDragEnded, RoutingStrategies.Tunnel);
+            slider.AddHandler(PointerCaptureLostEvent, OnSliderDragEnded, RoutingStrategies.Tunnel);
         }
 
         private void OnSliderDragStarted(object? sender, PointerPressedEventArgs e)
@@ -68,11 +67,11 @@ namespace ZeroTouch.UI.Views
 
         private void OnSliderDragEnded(object? sender, PointerReleasedEventArgs e)
         {
-            if (DataContext is MainDashboardViewModel vm)
-            {
-                vm.IsUserInteracting = false;
-                vm.SeekCommand.Execute(vm.Progress);
-            }
+            if (DataContext is not MainDashboardViewModel vm)
+                return;
+            
+            vm.IsUserInteracting = false;
+            vm.SeekCommand.Execute(vm.Progress);
         }
 
         private void InitializeMap()
@@ -85,7 +84,7 @@ namespace ZeroTouch.UI.Views
             var urlFormatter = new HttpTileSource(
                 new BruTile.Predefined.GlobalSphericalMercator(),
                 "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
-                new[] { "a", "b", "c", "d" },
+                ["a", "b", "c", "d"],
                 name: "CartoDB Voyager"
             );
 
@@ -107,8 +106,8 @@ namespace ZeroTouch.UI.Views
 
             _mapControl.Loaded += (s, e) =>
             {
-                double startLon = 120.2846;
-                double startLat = 22.7322;
+                const double startLon = 120.2846;
+                const double startLat = 22.7322;
 
                 var p = SphericalMercator.FromLonLat(startLon, startLat);
                 var startPoint = new MPoint(p.x, p.y);
@@ -127,7 +126,7 @@ namespace ZeroTouch.UI.Views
 
         private List<MPoint> GetRoutePoints(string routeIdentifier)
         {
-            string fileName = routeIdentifier switch
+            var fileName = routeIdentifier switch
             {
                 "Home" => "route-1.json",
                 "Work" => "route-2.json",
@@ -236,14 +235,6 @@ namespace ZeroTouch.UI.Views
             }
         }
 
-        private void OnRoutePreviewPointerEntered(object? sender, PointerEventArgs e)
-        {
-            if (sender is Control control && control.Tag is string routeName)
-            {
-                PreviewRoute(routeName);
-            }
-        }
-
         private void OnGoRouteClick(object? sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is string routeName)
@@ -254,10 +245,10 @@ namespace ZeroTouch.UI.Views
 
         private void OnRouteBlockClicked(object? sender, PointerPressedEventArgs e)
         {
-            if (sender is not Control control || control.DataContext is not FocusItemViewModel item)
+            if (sender is not Control { DataContext: FocusItemViewModel item })
                 return;
 
-            if (this.DataContext is not MainDashboardViewModel vm)
+            if (DataContext is not MainDashboardViewModel vm)
                 return;
             
             vm.RouteFocusGroup.SelectItem(item);
@@ -285,7 +276,7 @@ namespace ZeroTouch.UI.Views
                 var steps = Math.Max(1, (int)(distance / stepSize));
 
                 // Linear interpolation
-                for (int j = 0; j < steps; j++)
+                for (var j = 0; j < steps; j++)
                 {
                     var fraction = (double)j / steps;
                     var x = start.X + (end.X - start.X) * fraction;
@@ -360,7 +351,7 @@ namespace ZeroTouch.UI.Views
                 Interval = TimeSpan.FromMilliseconds(20)
             };
 
-            double currentSmoothRotation = _mapControl.Map.Navigator.Viewport.Rotation;
+            var currentSmoothRotation = _mapControl.Map.Navigator.Viewport.Rotation;
 
             _navigationTimer.Tick += (s, e) =>
             {
@@ -448,7 +439,7 @@ namespace ZeroTouch.UI.Views
                         });
                     }
 
-                    _vehicleLayer.Features = new[] { newFeature };
+                    _vehicleLayer.Features = [newFeature];
                     _vehicleLayer.DataHasChanged();
                 }
 
