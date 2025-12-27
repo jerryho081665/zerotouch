@@ -51,7 +51,18 @@ namespace ZeroTouch.UI.Navigation
             }
             else
             {
-                ExecuteCommand();
+                IsAnimating = true;
+                
+                await Task.Delay(500); 
+                
+                if (Command?.CanExecute(CommandParameter) == true)
+                {
+                    Command.Execute(CommandParameter);
+                }
+                
+                await Task.Delay(200);
+        
+                IsAnimating = false;
                 IsArmed = false;
             }
         }
